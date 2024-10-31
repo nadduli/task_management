@@ -10,16 +10,16 @@ from api.db.database import get_session
 from .schema import TaskCreate, TaskUpdate, TaskModel
 from .service import TaskService
 from .models import Task
+from api.v1.auth.dependencies import AccessTokenBearer
 
 
 task_router = APIRouter()
 task_service = TaskService()
+access_token_bearer = AccessTokenBearer()
 
 
 @task_router.get("/", status_code=status.HTTP_200_OK, response_model=List[TaskModel])
-async def get_all_tasks(
-    skip: int = 0, limit: int = 10, session: AsyncSession = Depends(get_session)
-):
+async def get_all_tasks(skip: int = 0, limit: int = 10, session: AsyncSession = Depends(get_session), user_details = Depends(access_token_bearer)):
     """Retrieve a paginated list of tasks."""
     tasks = await task_service.get_tasks(session, skip=skip, limit=limit)
     return tasks

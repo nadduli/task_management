@@ -21,7 +21,7 @@ class Task(SQLModel, table=True):
     updated_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
     title: str
     description: str
-    dueDate: Optional[datetime] = None
+    due_date: Optional[datetime] = Field(nullable=True)
     status: str
     priority: Optional[str]
     assigned_to: Optional[EmailStr]
