@@ -33,7 +33,9 @@ class UserUpdate(BaseModel):
     username: str
     password: str
 
+
 class LoginModel(BaseModel):
     """login model"""
+
     email: str
     password: str

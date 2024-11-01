@@ -15,6 +15,7 @@ user_service = UserService()
 
 REFRESH_TOKEN_EXPIRY_DAYS = 2
 
+
 @auth_router.post(
     "/register", status_code=status.HTTP_201_CREATED, response_model=UserModel
 )
@@ -32,8 +33,10 @@ async def register(user_data: UserCreate, session: AsyncSession = Depends(get_se
     return new_user
 
 
-@auth_router.post('/login', response_model=dict)
-async def login_users(user_data: LoginModel, session: AsyncSession = Depends(get_session)):
+@auth_router.post("/login", response_model=dict)
+async def login_users(
+    user_data: LoginModel, session: AsyncSession = Depends(get_session)
+):
     """Login route"""
     email = user_data.email
     password = user_data.password
@@ -44,18 +47,12 @@ async def login_users(user_data: LoginModel, session: AsyncSession = Depends(get
         valid_password = verify_password(password, user.password)
         if valid_password:
             access_token = create_access_token(
-                user_data={
-                    'email': user.email,
-                    'user_id': str(user.id)
-                }
+                user_data={"email": user.email, "user_id": str(user.id)}
             )
             refresh_token = create_access_token(
-                user_data={
-                    'email': user.email,
-                    'user_id': str(user.id)
-                },
+                user_data={"email": user.email, "user_id": str(user.id)},
                 refresh=True,
-                expiry=timedelta(days=REFRESH_TOKEN_EXPIRY_DAYS)
+                expiry=timedelta(days=REFRESH_TOKEN_EXPIRY_DAYS),
             )
 
             return JSONResponse(
@@ -63,10 +60,7 @@ async def login_users(user_data: LoginModel, session: AsyncSession = Depends(get
                     "message": "Login successful",
                     "access_token": access_token,
                     "refresh_token": refresh_token,
-                    "user": {
-                        "email": user.email,
-                        "id": str(user.id)
-                    }
+                    "user": {"email": user.email, "id": str(user.id)},
                 }
             )
     raise HTTPException(
