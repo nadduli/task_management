@@ -23,27 +23,29 @@ This is a **Task Management API** built with **FastAPI** and **SQLModel**. It pr
 
 ```bash
 git clone https://github.com/nadduli/task_management.git
+```
+
 cd task_management
 
-2. Set Up Virtual Environment
+### 2. Set Up Virtual Environment
 python3 -m venv env
 source env/bin/activate
 
-3. Install Dependencies
+### 3. Install Dependencies
 pip install -r requirements.txt
 
-4. Configure Environment Variables
+### 4. Configure Environment Variables
 Create a .env file in the project root:
 
-DATABASE_URL=postgresql+asyncpg://username:password@localhost:5432/task_db
-SECRET_KEY=your_secret_key
-ALGORITHM=HS256
-ACCESS_TOKEN_EXPIRE_MINUTES=30
+* DATABASE_URL=postgresql+asyncpg://username:password@localhost:5432/task_db
+* SECRET_KEY=your_secret_key
+* ALGORITHM=HS256
+* ACCESS_TOKEN_EXPIRE_MINUTES=30
 
-5. Run Database Migrations
+### 5. Run Database Migrations
 alembic upgrade head
 
-6. Start the Application
+### 6. Start the Application
 fastapi dev api/
 
 ### The API will be available at http://localhost:8000.
@@ -52,28 +54,29 @@ fastapi dev api/
 ### Authentication
 * POST /auth/signup - Register a new user
 * POST /auth/login - Login and receive an access token
+
 ### Users
 * GET /users/{user_id} - Get user details by ID
 * PUT /users/{user_id} - Update user details
 * DELETE /users/{user_id} - Delete a user
 
-Tasks
+### Tasks
 * POST /tasks - Create a new task
 * GET /tasks - Retrieve all tasks
 * GET /tasks/{task_id} - Get task details by ID
 * PUT /tasks/{task_id} - Update a task
 * DELETE /tasks/{task_id} - Delete a task
 
-Models
+### Models
 * Task: Fields include title, description, due date, status, priority, assigned user, and tags.
 * User: Fields include username, email, hashed password, and verification status.
 
-Authentication
+### Authentication
 After logging in, users receive an access token which should be included in the Authorization header for protected routes:
 
 Authorization: Bearer your_jwt_token
 
-## Seeding Data
+### Seeding Data
 * python3 seeds/seed_tasks.py
 * python3 seeds/seed_users.py
 
