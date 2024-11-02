@@ -16,10 +16,11 @@ class TokenBearer(HTTPBearer):
 
     async def __call__(self, request: Request) -> dict:
         creds = await super().__call__(request)
-        
+
         if not creds or not creds.credentials:
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED, detail="Authorization header missing"
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authorization header missing",
             )
         token = creds.credentials
 
@@ -29,7 +30,7 @@ class TokenBearer(HTTPBearer):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or expired token"
             )
-        
+
         if not self.valid_token(token):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Invalid or expired token"

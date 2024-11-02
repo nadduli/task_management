@@ -69,7 +69,8 @@ async def login_users(
         status_code=status.HTTP_403_FORBIDDEN, detail="Invalid Email or Password"
     )
 
-@auth_router.get('/refresh_token')
+
+@auth_router.get("/refresh_token")
 async def get_new_access_token(token_details: dict = Depends(RefreshTokenBearer)):
     """Create New Access Token"""
     return {}
