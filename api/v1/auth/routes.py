@@ -9,6 +9,8 @@ from .service import UserService
 from .utils import create_access_token, decode_access_token, verify_password
 from datetime import timedelta
 from fastapi.responses import JSONResponse
+from .dependencies import RefreshTokenBearer
+
 
 auth_router = APIRouter()
 user_service = UserService()
@@ -66,3 +68,8 @@ async def login_users(
     raise HTTPException(
         status_code=status.HTTP_403_FORBIDDEN, detail="Invalid Email or Password"
     )
+
+@auth_router.get('/refresh_token')
+async def get_new_access_token(token_details: dict = Depends(RefreshTokenBearer)):
+    """Create New Access Token"""
+    return {}

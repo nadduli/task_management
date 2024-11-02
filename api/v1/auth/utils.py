@@ -2,10 +2,10 @@
 """Password Hashing Module"""
 
 from datetime import timedelta, datetime
-from passlib.context import CryptContext
-import jwt
 import uuid
 import logging
+from passlib.context import CryptContext
+import jwt
 from api.core.config import Config
 
 
@@ -29,32 +29,33 @@ def create_access_token(
     user_data: dict, expiry: timedelta = None, refresh: bool = False
 ):
     """Create JWT access token"""
+    payload = {}
 
-    payload = {
-        "user": user_data,
-        "jti": str(uuid.uuid4()),
-        "exp": datetime.now()
-        + (expiry if expiry is not None else timedelta(seconds=ACCESS_TOKEN_EXPIRY)),
-        "refresh": refresh,
-    }
+    payload["user"] = user_data
+    payload["exp"] = datetime.now() + (expiry if expiry is not None else timedelta(seconds=ACCESS_TOKEN_EXPIRY))
+    
+    payload["jti"] =  str(uuid.uuid4())
+
+    payload["refresh"] = refresh
 
     token = jwt.encode(
         payload=payload, key=Config.JWT_SECRET, algorithm=Config.JWT_ALGORITHM
     )
-
     if isinstance(token, bytes):
         token = token.decode("utf-8")
 
     return token
 
 
-def decode_access_token(token: str):
+def decode_access_token(token: str) -> dict:
     """Decode a jwt access token"""
     try:
         token_data = jwt.decode(
-            jwt=token, key=Config.JWT_SECRET, algorithm=Config.JWT_ALGORITHM
+            jwt=token, key=Config.JWT_SECRET, algorithms=[Config.JWT_ALGORITHM]
         )
+        
         return token_data
+    
     except jwt.PyJWTError as e:
         logging.exception(e)
         return None
