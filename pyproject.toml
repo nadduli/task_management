@@ -10,6 +10,9 @@ python = "^3.8"
 requests = "^2.32.3"
 pyjwt = "^2.9.0"
 pycodestyle = "^2.12.1"
+fastapi = "^0.115.4"
+sqlmodel = "^0.0.22"
+passlib = "^1.7.4"
 
 
 [build-system]
