@@ -9,7 +9,8 @@ from .service import UserService
 from .utils import create_access_token, decode_access_token, verify_password
 from datetime import timedelta, datetime
 from fastapi.responses import JSONResponse
-from .dependencies import RefreshTokenBearer
+from .dependencies import RefreshTokenBearer, AccessTokenBearer
+from api.db.redis import add_jti_to_block_list
 
 
 auth_router = APIRouter()
@@ -21,7 +22,10 @@ REFRESH_TOKEN_EXPIRY_DAYS = 2
 @auth_router.post(
     "/register", status_code=status.HTTP_201_CREATED, response_model=UserModel
 )
-async def register(user_data: UserCreate, session: AsyncSession = Depends(get_session)):
+async def register(
+    user_data: UserCreate,
+    session: AsyncSession = Depends(get_session)
+                                                ):
     """Register new user"""
 
     email = user_data.email
@@ -66,12 +70,15 @@ async def login_users(
                 }
             )
     raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN, detail="Invalid Email or Password"
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Invalid Email or Password"
     )
 
 
 @auth_router.get("/refresh_token")
-async def get_new_access_token(token_details: dict = Depends(RefreshTokenBearer())):
+async def get_new_access_token(
+    token_details: dict = Depends(RefreshTokenBearer()
+                                  )):
     """Create New Access Token"""
     expiry_timestamp = token_details["exp"]
     if datetime.fromtimestamp(expiry_timestamp) > datetime.now():
@@ -80,5 +87,19 @@ async def get_new_access_token(token_details: dict = Depends(RefreshTokenBearer(
         return JSONResponse(content={"access_token": new_access_token})
 
     raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid or Expired Token"
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Invalid or Expired Token"
+    )
+
+
+@auth_router.get('/logout')
+async def revoke_token(token_details: dict = Depends(AccessTokenBearer())):
+    """logout endpoint"""
+    jti = token_details['jti']
+    await add_jti_to_block_list(jti)
+    return JSONResponse(
+        content={
+            "message": "Logout successfully"
+        },
+        status_code=status.HTTP_200_OK
     )

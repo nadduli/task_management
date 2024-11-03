@@ -15,10 +15,13 @@ class Task(SQLModel, table=True):
     __tablename__ = "tasks"
 
     id: uuid.UUID = Field(
-        sa_column=Column(pg.UUID, primary_key=True, nullable=False, default=uuid.uuid4)
+        sa_column=Column(pg.UUID, primary_key=True,
+                         nullable=False, default=uuid.uuid4)
     )
-    created_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
-    updated_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
+    created_at: datetime = Field(sa_column=Column(
+        pg.TIMESTAMP, default=datetime.now))
+    updated_at: datetime = Field(sa_column=Column(
+        pg.TIMESTAMP, default=datetime.now))
     title: str
     description: str
     due_date: Optional[datetime] = Field(nullable=True)
