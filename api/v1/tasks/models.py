@@ -15,20 +15,19 @@ class Task(SQLModel, table=True):
     __tablename__ = "tasks"
 
     id: uuid.UUID = Field(
-        sa_column=Column(pg.UUID, primary_key=True,
-                         nullable=False, default=uuid.uuid4)
-    )
+        sa_column=Column(pg.UUID, primary_key=True, nullable=False, default=uuid.uuid4))
     created_at: datetime = Field(sa_column=Column(
         pg.TIMESTAMP, default=datetime.now))
     updated_at: datetime = Field(sa_column=Column(
         pg.TIMESTAMP, default=datetime.now))
-    title: str
-    description: str
-    due_date: Optional[datetime] = Field(nullable=True)
-    status: str
-    priority: Optional[str]
+    title: str = Field(sa_column=Column(String, nullable=False))
+    description: str = Field(sa_column=Column(String, nullable=False))
+    due_date: Optional[datetime] = Field(sa_column=Column(pg.TIMESTAMP(timezone=True), nullable=True))
+    status: str = Field(sa_column=Column(String, nullable=False))
+    priority: Optional[str] = Field(sa_column=Column(String, nullable=True))
     assigned_to: Optional[EmailStr]
     tags: Optional[List[str]] = Field(sa_column=Column(ARRAY(String)))
+    user_id: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id")
 
     def __repr__(self):
         return f"<Task {self.title}>"

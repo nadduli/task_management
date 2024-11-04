@@ -9,7 +9,11 @@ from .models import Task
 class TaskService:
     """class TaskService"""
 
-    async def get_tasks(self, session: AsyncSession, skip: int = 0, limit: int = 10):
+    async def get_tasks(
+            self,
+            session: AsyncSession,
+            skip: int = 0,
+            limit: int = 10):
         """Retrieves a list of tasks with pagination"""
         statement = (
             select(Task).offset(skip).limit(
