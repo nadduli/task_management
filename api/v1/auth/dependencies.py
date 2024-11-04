@@ -1,13 +1,18 @@
 #!/usr/bin/python3
 """Authentication Module"""
 
-from fastapi import Request, status
+from fastapi import Request, status, Depends
 from fastapi.security import HTTPBearer
 from fastapi.security.http import HTTPAuthorizationCredentials
 from fastapi.exceptions import HTTPException
+from sqlmodel.ext.asyncio.session import AsyncSession
 from .utils import decode_access_token
 from api.db.redis import token_in_blocklist
+from api.db.database import get_session
+from .service import UserService
 
+
+user_service = UserService()
 
 class TokenBearer(HTTPBearer):
     """Protects endpoints by requiring a valid access token."""
@@ -84,3 +89,14 @@ class RefreshTokenBearer(TokenBearer):
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Please provide a valid refresh token",
             )
+
+async def get_current_user(token_details: dict = Depends(AccessTokenBearer()),
+                     session: AsyncSession = Depends(get_session)):
+    """Get current logged in user details"""
+    user_email = token_details['user']['email']
+    user = await user_service.get_user(user_email, session)
+    return user
+
+
+
+

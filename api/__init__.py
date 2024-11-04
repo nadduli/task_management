@@ -26,7 +26,7 @@ app = FastAPI(
     title="Tasks Management API",
     description="**API to manage task management with FastAPI**",
     version=VERSION,
-    lifespan=life_span,
+    #lifespan=life_span,
     terms_of_service="http://danielInnovations.com/terms/",
     contact={
         "name": "API Support",

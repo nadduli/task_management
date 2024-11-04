@@ -9,7 +9,7 @@ from .service import UserService
 from .utils import create_access_token, decode_access_token, verify_password
 from datetime import timedelta, datetime
 from fastapi.responses import JSONResponse
-from .dependencies import RefreshTokenBearer, AccessTokenBearer
+from .dependencies import RefreshTokenBearer, AccessTokenBearer, get_current_user
 from api.db.redis import add_jti_to_block_list
 
 
@@ -91,6 +91,10 @@ async def get_new_access_token(
         detail="Invalid or Expired Token"
     )
 
+@auth_router.get('/me')
+async def get_current_user(user= Depends(get_current_user)):
+    """get current user routes"""
+    return user
 
 @auth_router.get('/logout')
 async def revoke_token(token_details: dict = Depends(AccessTokenBearer())):
