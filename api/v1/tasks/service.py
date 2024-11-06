@@ -2,6 +2,8 @@
 """Service Module for Task"""
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select, desc
+from typing import Optional, List
+from sqlalchemy import or_
 from .schema import TaskCreate, TaskUpdate
 from .models import Task
 
@@ -13,15 +15,41 @@ class TaskService:
             self,
             session: AsyncSession,
             skip: int = 0,
-            limit: int = 10):
-        """Retrieves a list of tasks with pagination"""
+            limit: int = 10,
+            status: Optional[str] = None,
+            priority: Optional[str] = None,
+            tags: Optional[List[str]] = None
+            ):
+        """Retrieves a list of tasks with pagination and optional filters"""
+        
         statement = (
             select(Task).offset(skip).limit(
                 limit).order_by(desc(Task.created_at))
         )
+        if status:
+            statement = statement.where(Task.status == status)
+        if priority:
+            statement = statement.where(Task.priority == priority)
+        if tags:
+            statement = statement.where(Task.tags.contains(*tags))
+
         result = await session.exec(statement)
         return result.all()
 
+    async def get_user_tasks(
+            self,
+            user_id,
+            session: AsyncSession,
+            skip: int = 0,
+            limit: int = 10):
+        """Retrieves a list of tasks with pagination"""
+        statement = (
+            select(Task).offset(skip).limit(
+                limit).where(Task.user_id == user_id).order_by(desc(Task.created_at))
+        )
+        result = await session.exec(statement)
+        return result.all()
+    
     async def get_task(self, task_id: str, session: AsyncSession):
         """Retrieve a Task by id"""
         statement = select(Task).where(Task.id == task_id)
@@ -30,10 +58,11 @@ class TaskService:
 
         return task if task is not None else None
 
-    async def create_task(self, task_data: TaskCreate, session: AsyncSession):
+    async def create_task(self, task_data: TaskCreate, user_id, session: AsyncSession):
         """create tasks"""
         task_data_dict = dict(task_data)
         new_task = Task(**task_data_dict)
+        new_task.user_id = user_id
         session.add(new_task)
         await session.commit()
         return new_task

@@ -24,7 +24,7 @@ VERSION = "v1"
 
 app = FastAPI(
     title="Tasks Management API",
-    description="**API to manage task management with FastAPI**",
+    description="**Advanced Task Management API**",
     version=VERSION,
     #lifespan=life_span,
     terms_of_service="http://danielInnovations.com/terms/",

@@ -2,7 +2,7 @@
 """Route file to group task related operations"""
 
 
-from typing import List
+from typing import List, Optional
 from fastapi import APIRouter, status, Depends
 from fastapi.exceptions import HTTPException
 from sqlmodel.ext.asyncio.session import AsyncSession
@@ -24,13 +24,33 @@ role_checker = Depends(RoleChecker(["admin", "user"]))
 async def get_all_tasks(
     skip: int = 0,
     limit: int = 10,
+    status: Optional[str] = None,
+    priority: Optional[str] = None,
+    tags: Optional[List[str]] = None,
     session: AsyncSession = Depends(get_session),
     token_details: dict = Depends(access_token_bearer),
 ):
     """Retrieve a paginated list of tasks."""
-    tasks = await task_service.get_tasks(session, skip=skip, limit=limit)
+    tasks = await task_service.get_tasks(
+        session, 
+        skip=skip, 
+        limit=limit, 
+        status=status, 
+        priority=priority, 
+        tags=tags)
     return tasks
 
+@task_router.get("/user/{user_id}", status_code=status.HTTP_200_OK, response_model=List[TaskModel], dependencies=[role_checker])
+async def get_user_tasks(
+     user_id,
+    skip: int = 0,
+    limit: int = 10,
+    session: AsyncSession = Depends(get_session),
+    token_details: dict = Depends(access_token_bearer),
+):
+    """Retrieve a paginated list of tasks."""
+    tasks = await task_service.get_user_tasks(user_id, session, skip=skip, limit=limit)
+    return tasks
 
 @task_router.get("/{task_id}", status_code=status.HTTP_200_OK, response_model=TaskModel, dependencies=[role_checker])
 async def get_task(
@@ -54,7 +74,8 @@ async def create_tasks(
     token_details: dict = Depends(access_token_bearer)
 ) -> dict:
     """Create a new task."""
-    new_task = await task_service.create_task(task_data, session)
+    user_id = token_details.get('user')['user_id']
+    new_task = await task_service.create_task(task_data, user_id, session)
     return new_task
 
 
