@@ -10,7 +10,7 @@ import sqlalchemy.dialects.postgresql as pg
 
 
 class Task(SQLModel, table=True):
-    """Class Task which inherits from BaseModel"""
+    """ Task model"""
     __tablename__ = "tasks"
     
     id: uuid.UUID = Field(
