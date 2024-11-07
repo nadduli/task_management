@@ -3,7 +3,9 @@
 
 from datetime import datetime
 import uuid
-from sqlmodel import Field, Column, SQLModel
+from typing import List
+from sqlmodel import Field, Column, SQLModel, Relationship
+from api.v1.tasks import models
 import sqlalchemy.dialects.postgresql as pg
 
 
@@ -25,6 +27,7 @@ class User(SQLModel, table=True):
     password: str = Field(exclude=True)
     isVerified: bool = Field(default=False)
     role: str = Field(sa_column=Column(pg.VARCHAR, nullable=False, server_default="user"))
+    tasks: List["models.Task"] = Relationship(back_populates= "user", sa_relationship_kwargs={'lazy': 'selectin'})
 
     def __repr__(self) -> str:
         return f"<User {self.username}>"

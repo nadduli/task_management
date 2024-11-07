@@ -12,6 +12,7 @@ from .schema import TaskCreate, TaskUpdate, TaskModel
 from .service import TaskService
 from .models import Task
 from api.v1.auth.dependencies import RoleChecker
+from api.v1.errors import TaskNotFound
 
 
 task_router = APIRouter()
@@ -61,9 +62,8 @@ async def get_task(
     """Retrieve a task by its ID."""
     task = await task_service.get_task(task_id, session)
     if not task:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Task not Found"
-        )
+        raise TaskNotFound()
+    
     return task
 
 
@@ -91,9 +91,8 @@ async def update_tasks(
     """Update an existing task by its ID."""
     task = await task_service.update_task(task_id, task_data, session)
     if not task:
-        return HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-        )
+        raise TaskNotFound()
+    
     return task
 
 
@@ -108,6 +107,4 @@ async def delete_tasks(
     if task:
         return {"detail": "Task deleted successfully"}
     else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Task not found"
-        )
+        raise TaskNotFound()

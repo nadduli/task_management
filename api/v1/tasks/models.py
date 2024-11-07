@@ -1,12 +1,13 @@
 #!/usr/bin/python3
 """Task Model"""
 
-from sqlmodel import Field, Column, String, ARRAY, SQLModel, Index
+from sqlmodel import Field, Column, String, ARRAY, SQLModel, Index, Relationship
 import uuid
 from typing import Optional, List
 from pydantic import EmailStr
 from datetime import datetime
 import sqlalchemy.dialects.postgresql as pg
+from api.v1.auth import models
 
 
 class Task(SQLModel, table=True):
@@ -27,7 +28,7 @@ class Task(SQLModel, table=True):
     assigned_to: Optional[EmailStr]
     tags: Optional[List[str]] = Field(sa_column=Column(ARRAY(String), index=True))
     user_id: Optional[uuid.UUID] = Field(default=None, foreign_key="users.id")
-
+    user: Optional["models.User"] = Relationship(back_populates="tasks")
 
     def __repr__(self):
         return f"<Task {self.title}>"

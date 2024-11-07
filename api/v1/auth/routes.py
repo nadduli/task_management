@@ -4,13 +4,18 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 from api.db.database import get_session
-from .schema import UserCreate, UserModel, LoginModel
+from .schema import UserCreate, UserModel, LoginModel, UserTask
 from .service import UserService
 from .utils import create_access_token, decode_access_token, verify_password
 from datetime import timedelta, datetime
 from fastapi.responses import JSONResponse
 from .dependencies import RefreshTokenBearer, AccessTokenBearer, get_current_user, RoleChecker
 from api.db.redis import add_jti_to_block_list
+from api.v1.errors import (
+    UserAlreadyExists,
+    InvalidCredentials,
+    InvalidToken
+    )
 
 
 auth_router = APIRouter()
@@ -32,10 +37,8 @@ async def register(
     email = user_data.email
     user_exists = await user_service.user_exists(email, session)
     if user_exists:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User with this email already exists",
-        )
+        raise UserAlreadyExists()
+    
     new_user = await user_service.create_user(user_data, session)
     return new_user
 
@@ -70,10 +73,7 @@ async def login_users(
                     "user": {"email": user.email, "id": str(user.id)},
                 }
             )
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="Invalid Email or Password"
-    )
+    raise InvalidCredentials()
 
 
 @auth_router.get("/refresh_token")
@@ -87,12 +87,9 @@ async def get_new_access_token(
 
         return JSONResponse(content={"access_token": new_access_token})
 
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Invalid or Expired Token"
-    )
+    raise InvalidToken()
 
-@auth_router.get('/me')
+@auth_router.get('/me', response_model=UserTask)
 async def get_current_user(user= Depends(get_current_user), _: bool = Depends(role_checker)):
     """get current user routes"""
     return user

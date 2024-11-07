@@ -2,9 +2,10 @@
 """User Model"""
 
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List
 import uuid
 from pydantic import BaseModel, EmailStr, Field
+from api.v1.tasks.schema import TaskCreate
 
 
 class UserModel(BaseModel):
@@ -18,6 +19,10 @@ class UserModel(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+class UserTask(UserModel):
+    """User data Model with tasks"""
+
+    tasks: List[TaskCreate]
 
 class UserCreate(BaseModel):
     """data class to create a new user"""
