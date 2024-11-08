@@ -12,19 +12,18 @@ class TaskService:
     """class TaskService"""
 
     async def get_tasks(
-            self,
-            session: AsyncSession,
-            skip: int = 0,
-            limit: int = 10,
-            status: Optional[str] = None,
-            priority: Optional[str] = None,
-            tags: Optional[List[str]] = None
-            ):
+        self,
+        session: AsyncSession,
+        skip: int = 0,
+        limit: int = 10,
+        status: Optional[str] = None,
+        priority: Optional[str] = None,
+        tags: Optional[List[str]] = None,
+    ):
         """Retrieves a list of tasks with pagination and optional filters"""
-        
+
         statement = (
-            select(Task).offset(skip).limit(
-                limit).order_by(desc(Task.created_at))
+            select(Task).offset(skip).limit(limit).order_by(desc(Task.created_at))
         )
         if status:
             statement = statement.where(Task.status == status)
@@ -37,19 +36,19 @@ class TaskService:
         return result.all()
 
     async def get_user_tasks(
-            self,
-            user_id,
-            session: AsyncSession,
-            skip: int = 0,
-            limit: int = 10):
+        self, user_id, session: AsyncSession, skip: int = 0, limit: int = 10
+    ):
         """Retrieves a list of tasks with pagination"""
         statement = (
-            select(Task).offset(skip).limit(
-                limit).where(Task.user_id == user_id).order_by(desc(Task.created_at))
+            select(Task)
+            .offset(skip)
+            .limit(limit)
+            .where(Task.user_id == user_id)
+            .order_by(desc(Task.created_at))
         )
         result = await session.exec(statement)
         return result.all()
-    
+
     async def get_task(self, task_id: str, session: AsyncSession):
         """Retrieve a Task by id"""
         statement = select(Task).where(Task.id == task_id)

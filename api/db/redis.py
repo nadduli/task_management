@@ -9,9 +9,7 @@ from api.core.config import Config
 JTI_EXPIRY = 36000
 
 token_blocklist = aioredis.StrictRedis(
-    host=Config.REDIS_HOST,
-    port=Config.REDIS_PORT,
-    db=0
+    host=Config.REDIS_HOST, port=Config.REDIS_PORT, db=0
 )
 
 

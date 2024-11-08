@@ -18,11 +18,12 @@ from api.v1.errors import (
     RefreshTokenRequired,
     AccessTokenRequired,
     InsufficientPermissions,
-    InvalidCredentials
+    InvalidCredentials,
 )
 
 
 user_service = UserService()
+
 
 class TokenBearer(HTTPBearer):
     """Protects endpoints by requiring a valid access token."""
@@ -35,20 +36,20 @@ class TokenBearer(HTTPBearer):
 
         if not creds or not creds.credentials:
             raise InvalidCredentials()
-        
+
         token = creds.credentials
 
         token_data = decode_access_token(token)
 
         if not token_data:
             raise InvalidToken()
-        
+
         if not self.valid_token(token):
             raise InvalidToken()
-        
-        if await token_in_blocklist(token_data['jti']):
+
+        if await token_in_blocklist(token_data["jti"]):
             raise RevokedToken()
-        
+
         self.verify_token_data(token_data)
 
         return token_data
@@ -60,8 +61,7 @@ class TokenBearer(HTTPBearer):
 
     def verify_token_data(self, token_data):
         """override this method in child classes"""
-        raise NotImplementedError(
-            "Please Override this method in child classes")
+        raise NotImplementedError("Please Override this method in child classes")
 
 
 class AccessTokenBearer(TokenBearer):
@@ -80,10 +80,14 @@ class RefreshTokenBearer(TokenBearer):
         """Verify refresh token data."""
         if token_data and not token_data["refresh"]:
             raise RefreshTokenRequired()
-async def get_current_user(token_details: dict = Depends(AccessTokenBearer()),
-                     session: AsyncSession = Depends(get_session)):
+
+
+async def get_current_user(
+    token_details: dict = Depends(AccessTokenBearer()),
+    session: AsyncSession = Depends(get_session),
+):
     """Get current logged in user details"""
-    user_email = token_details['user']['email']
+    user_email = token_details["user"]["email"]
     user = await user_service.get_user(user_email, session)
     return user
 

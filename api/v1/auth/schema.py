@@ -19,10 +19,12 @@ class UserModel(BaseModel):
     created_at: datetime
     updated_at: datetime
 
+
 class UserTask(UserModel):
     """User data Model with tasks"""
 
     tasks: List[TaskCreate]
+
 
 class UserCreate(BaseModel):
     """data class to create a new user"""
