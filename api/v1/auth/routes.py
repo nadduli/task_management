@@ -11,11 +11,7 @@ from datetime import timedelta, datetime
 from fastapi.responses import JSONResponse
 from .dependencies import RefreshTokenBearer, AccessTokenBearer, get_current_user, RoleChecker
 from api.db.redis import add_jti_to_block_list
-from api.v1.errors import (
-    UserAlreadyExists,
-    InvalidCredentials,
-    InvalidToken
-    )
+from api.v1.errors import UserAlreadyExists, InvalidCredentials,InvalidToken
 
 
 auth_router = APIRouter()

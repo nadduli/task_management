@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 """Error Module"""
 
-from fastapi import HTTPException, status
+from typing import Any, Callable
+from fastapi.requests import Request
+from fastapi.responses import JSONResponse
 
 
 class TaskException(Exception):
@@ -40,13 +42,16 @@ class UserNotFound(TaskException):
     """user not found"""
     pass
 
-class InternalServerError(TaskException):
-    """internal server error"""
-    pass
 
 class TaskNotFound(TaskException):
     """task not found"""
     pass
 
-
-
+def create_exception_handler(status_code: int, initial_detail: Any) -> Callable[[Request, Exception], JSONResponse]:
+    """Create exception handler"""
+    async def exception_handler(request: Request, exc: TaskException):
+        return JSONResponse(
+            status_code=status_code,
+            content=initial_detail
+        )
+    return exception_handler
