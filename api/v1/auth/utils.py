@@ -7,6 +7,7 @@ import logging
 from passlib.context import CryptContext
 import jwt
 from api.core.config import Config
+from itsdangerous import URLSafeTimedSerializer
 
 
 password_context = CryptContext(schemes=["bcrypt"])
@@ -61,3 +62,23 @@ def decode_access_token(token: str) -> dict:
     except jwt.PyJWTError as e:
         logging.exception(e)
         return None
+
+
+salt = "email-configuration"
+
+serializer = URLSafeTimedSerializer(secret_key=Config.JWT_SECRET, salt=salt)
+
+
+def create_url_safe_token(data: dict):
+    """Create url safe token"""
+    token = serializer.dumps(data, salt=salt)
+    return token
+
+
+def decode_url_safe_token(token: str):
+    """Decode url safe token"""
+    try:
+        data = serializer.loads(token, salt=salt)
+        return data
+    except Exception as e:
+        logging.error(str(e))

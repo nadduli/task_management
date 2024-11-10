@@ -4,9 +4,15 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 from api.db.database import get_session
-from .schema import UserCreate, UserModel, LoginModel, UserTask
+from .schema import UserCreate, UserModel, LoginModel, UserTask, EmailModel
 from .service import UserService
-from .utils import create_access_token, decode_access_token, verify_password
+from .utils import (
+    create_access_token,
+    decode_access_token,
+    verify_password,
+    create_url_safe_token,
+    decode_url_safe_token,
+)
 from datetime import timedelta, datetime
 from fastapi.responses import JSONResponse
 from .dependencies import (
@@ -16,7 +22,14 @@ from .dependencies import (
     RoleChecker,
 )
 from api.db.redis import add_jti_to_block_list
-from api.v1.errors import UserAlreadyExists, InvalidCredentials, InvalidToken
+from api.v1.errors import (
+    UserAlreadyExists,
+    InvalidCredentials,
+    InvalidToken,
+    UserNotFound,
+)
+from api.v1.mail import mail, create_message
+from api.core.config import Config
 
 
 auth_router = APIRouter()
@@ -26,9 +39,20 @@ role_checker = RoleChecker(["admin", "user"])
 REFRESH_TOKEN_EXPIRY_DAYS = 2
 
 
-@auth_router.post(
-    "/register", status_code=status.HTTP_201_CREATED, response_model=UserModel
-)
+@auth_router.post("/send_mail")
+async def send_mail(emails: EmailModel):
+    """send mail"""
+    email_addresses = emails.email_addresses
+
+    html = "<h1>Welcome to Task Management </h1>"
+    message = create_message(
+        recipients=email_addresses, subject="Welcome to Task Management", body=html
+    )
+    await mail.send_message(message)
+    return {"message": "Email sent successfully"}
+
+
+@auth_router.post("/register", status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserCreate, session: AsyncSession = Depends(get_session)):
     """Register new user"""
 
@@ -38,7 +62,47 @@ async def register(user_data: UserCreate, session: AsyncSession = Depends(get_se
         raise UserAlreadyExists()
 
     new_user = await user_service.create_user(user_data, session)
-    return new_user
+
+    token = create_url_safe_token({"email": email})
+
+    link = f"http://{Config.DOMAIN}/api/v1/auth/verify/{token}"
+
+    html_message = f"""
+    <h1>Welcome to Task Management</h1>
+    <h2>Verify your email</h2>
+    <p>Click the {link} below to verify your account:</p>
+    """
+
+    message = create_message(
+        recipients=[email], subject="Verify your email", body=html_message
+    )
+
+    await mail.send_message(message)
+
+    return {
+        "message": "User created successfully! Check your email to verify your account",
+        "user": new_user,
+    }
+
+
+@auth_router.get("/verify/{token}")
+async def verify_email(token: str, session: AsyncSession = Depends(get_session)):
+    """Verify email route"""
+
+    token_data = decode_url_safe_token(token)
+    user_email = token_data.get("email")
+
+    if user_email:
+        user = await user_service.get_user(user_email, session)
+        if not user:
+            raise UserNotFound()
+        await user_service.update_user(user, {"isVerified": True}, session)
+
+        return JSONResponse(
+            content={"message": "Email verified successfully"},
+            status_code=status.HTTP_200_OK,
+        )
+    raise InvalidToken()
 
 
 @auth_router.post("/login", response_model=dict)
