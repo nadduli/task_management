@@ -68,6 +68,18 @@ class TaskNotFound(TaskException):
     pass
 
 
+class AccountNotVerified(TaskException):
+    """account not verified"""
+
+    pass
+
+
+class PasswordsDoNotMatch(TaskException):
+    """passwords do not match"""
+
+    pass
+
+
 def create_exception_handler(
     status_code: int, initial_detail: Any
 ) -> Callable[[Request, Exception], JSONResponse]:
@@ -88,6 +100,7 @@ def register_all_errors(app: FastAPI):
             initial_detail={
                 "message": "User with email already exists",
                 "error_code": "USER_ALREADY_EXISTS",
+                "resolution": "Please use a different email",
             },
         ),
     )
@@ -98,6 +111,7 @@ def register_all_errors(app: FastAPI):
             initial_detail={
                 "message": "User not found",
                 "error_code": "USER_NOT_FOUND",
+                "resolution": "Please check your credentials and try again",
             },
         ),
     )
@@ -108,6 +122,7 @@ def register_all_errors(app: FastAPI):
             initial_detail={
                 "message": "Invalid credentials",
                 "error_code": "INVALID_CREDENTIALS",
+                "resolution": "Please check your credentials and try again",
             },
         ),
     )
@@ -115,7 +130,11 @@ def register_all_errors(app: FastAPI):
         InvalidToken,
         create_exception_handler(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            initial_detail={"message": "Invalid token", "error_code": "INVALID_TOKEN"},
+            initial_detail={
+                "message": "Invalid token",
+                "error_code": "INVALID_TOKEN",
+                "resolution": "Please log in again",
+            },
         ),
     )
     app.add_exception_handler(
@@ -125,6 +144,7 @@ def register_all_errors(app: FastAPI):
             initial_detail={
                 "message": "Token has been revoked",
                 "error_code": "REVOKED_TOKEN",
+                "resolution": "Please log in again",
             },
         ),
     )
@@ -135,6 +155,7 @@ def register_all_errors(app: FastAPI):
             initial_detail={
                 "message": "Refresh token is required",
                 "error_code": "REFRESH_TOKEN_REQUIRED",
+                "resolution": "Please log in to get a refresh token",
             },
         ),
     )
@@ -145,6 +166,7 @@ def register_all_errors(app: FastAPI):
             initial_detail={
                 "message": "Access token is required",
                 "error_code": "ACCESS_TOKEN_REQUIRED",
+                "resolution": "Please log in to get an access token",
             },
         ),
     )
@@ -155,6 +177,7 @@ def register_all_errors(app: FastAPI):
             initial_detail={
                 "message": "Insufficient permissions",
                 "error_code": "INSUFFICIENT_PERMISSIONS",
+                "resolution": "Please check your permissions and try again",
             },
         ),
     )
@@ -166,6 +189,31 @@ def register_all_errors(app: FastAPI):
             initial_detail={
                 "message": "Task not found",
                 "error_code": "TASK_NOT_FOUND",
+                "resolution": "Please check the task ID and try again",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        AccountNotVerified,
+        create_exception_handler(
+            status_code=status.HTTP_403_FORBIDDEN,
+            initial_detail={
+                "message": "Account not verified",
+                "error_code": "ACCOUNT_NOT_VERIFIED",
+                "resolution": "Please check your email to verify your account",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        PasswordsDoNotMatch,
+        create_exception_handler(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            initial_detail={
+                "message": "Passwords do not match",
+                "error_code": "PASSWORDS_DO_NOT_MATCH",
+                "resolution": "Please check your passwords and try again",
             },
         ),
     )
@@ -177,6 +225,7 @@ def register_all_errors(app: FastAPI):
             content={
                 "message": "Internal server error",
                 "error_code": "INTERNAL_SERVER_ERROR",
+                "resolution": "Please try again later",
             },
         )
 
@@ -187,6 +236,7 @@ def register_all_errors(app: FastAPI):
             content={
                 "message": "Oops! Something went wrong",
                 "error_code": "server_error",
+                "resolution": "Please try again later",
             },
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )

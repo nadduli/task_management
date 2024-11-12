@@ -32,7 +32,7 @@ python3 -m venv env
 source env/bin/activate
 
 ### 3. Install Dependencies
-pip install -r requirements.txt
+poetry install
 
 ### 4. Configure Environment Variables
 Create a .env file in the project root:
