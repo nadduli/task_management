@@ -55,17 +55,21 @@ async def send_mail(emails: EmailModel):
     """send mail"""
     email_addresses = emails.email_addresses
 
-    html = "<h1>Welcome to Task Management </h1>"
+    html = "<h1>Welcome to Task Management App</h1>"
     subject = "Welcome to our App"
-    
+
     send_email.delay(email_addresses, subject, html)
 
     return {"message": "Email sent successfully"}
 
 
 @auth_router.post("/register", status_code=status.HTTP_201_CREATED)
-async def register(user_data: UserCreate, bg_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session)):
-    """Register new user"""
+async def register(
+    user_data: UserCreate,
+    bg_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_session),
+):
+    """Register new user with username, email and password"""
 
     email = user_data.email
     user_exists = await user_service.user_exists(email, session)

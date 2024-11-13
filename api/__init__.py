@@ -16,6 +16,8 @@ app = FastAPI(
     title="Tasks Management API",
     description="**Advanced Task Management API**",
     version=VERSION,
+    docs_url=f"/api/{VERSION}/docs",
+    redoc_url=f"/api/{VERSION}/redoc",
     terms_of_service="http://danielInnovations.com/terms/",
     contact={
         "name": "API Support",
