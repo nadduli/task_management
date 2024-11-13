@@ -2,15 +2,13 @@
 
 """REDIS Client"""
 
-import aioredis
-
+import redis.asyncio as aioredis
 from api.core.config import Config
+
 
 JTI_EXPIRY = 36000
 
-token_blocklist = aioredis.StrictRedis(
-    host=Config.REDIS_HOST, port=Config.REDIS_PORT, db=0
-)
+token_blocklist = aioredis.from_url(Config.REDIS_URL, decode_responses=True)
 
 
 async def add_jti_to_block_list(jti: str) -> None:

@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 """Auth Router Module"""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status, BackgroundTasks
 from sqlmodel.ext.asyncio.session import AsyncSession
 from api.db.database import get_session
+from api.v1.celery_tasks import send_email
 from .schema import (
     UserCreate,
     UserModel,
@@ -55,15 +56,15 @@ async def send_mail(emails: EmailModel):
     email_addresses = emails.email_addresses
 
     html = "<h1>Welcome to Task Management </h1>"
-    message = create_message(
-        recipients=email_addresses, subject="Welcome to Task Management", body=html
-    )
-    await mail.send_message(message)
+    subject = "Welcome to our App"
+    
+    send_email.delay(email_addresses, subject, html)
+
     return {"message": "Email sent successfully"}
 
 
 @auth_router.post("/register", status_code=status.HTTP_201_CREATED)
-async def register(user_data: UserCreate, session: AsyncSession = Depends(get_session)):
+async def register(user_data: UserCreate, bg_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session)):
     """Register new user"""
 
     email = user_data.email
@@ -77,17 +78,15 @@ async def register(user_data: UserCreate, session: AsyncSession = Depends(get_se
 
     link = f"http://{Config.DOMAIN}/api/v1/auth/verify/{token}"
 
-    html_message = f"""
+    html = f"""
     <h1>Welcome to Task Management</h1>
     <h2>Verify your email</h2>
     <p>Click the <a href="{link}">link</a> below to verify your account:</p>
     """
+    emails = [email]
+    subject = "Verify your email"
 
-    message = create_message(
-        recipients=[email], subject="Verify your email", body=html_message
-    )
-
-    await mail.send_message(message)
+    send_email.delay(emails, subject, html)
 
     return {
         "message": "User created successfully! Check your email to verify your account",
