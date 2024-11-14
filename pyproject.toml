@@ -25,6 +25,8 @@ celery = "^5.4.0"
 redis = "^5.2.0"
 asgiref = "^3.8.1"
 flower = "^2.0.1"
+pytest = "^8.3.3"
+schemathesis = "^3.38.6"
 
 
 [build-system]

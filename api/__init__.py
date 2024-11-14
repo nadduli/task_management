@@ -10,14 +10,15 @@ from api.v1.errors import register_all_errors
 from api.v1.middleware import register_middleware
 
 
-VERSION = "v1"
+version = "v1"
 
 app = FastAPI(
     title="Tasks Management API",
     description="**Advanced Task Management API**",
-    version=VERSION,
-    docs_url=f"/api/{VERSION}/docs",
-    redoc_url=f"/api/{VERSION}/redoc",
+    version=version,
+    docs_url=f"/api/{version}/docs",
+    redoc_url=f"/api/{version}/redoc",
+    openapi_url=f"/api/{version}/openapi.json",
     terms_of_service="http://danielInnovations.com/terms/",
     contact={
         "name": "API Support",
@@ -35,5 +36,5 @@ register_all_errors(app)
 register_middleware(app)
 
 
-app.include_router(auth_router, prefix=f"/api/{VERSION}/auth", tags=["auth"])
-app.include_router(task_router, prefix=f"/api/{VERSION}/tasks", tags=["tasks"])
+app.include_router(auth_router, prefix=f"/api/{version}/auth", tags=["auth"])
+app.include_router(task_router, prefix=f"/api/{version}/tasks", tags=["tasks"])
