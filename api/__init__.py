@@ -4,6 +4,8 @@ Main entry point of the Task Management application.
 """
 
 from fastapi import FastAPI
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from api.v1.tasks.routes import task_router
 from api.v1.auth.routes import auth_router
 from api.v1.errors import register_all_errors
@@ -30,6 +32,9 @@ app = FastAPI(
         "url": "https://opensource.org/licenses/MIT",
     },
 )
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
 
 register_all_errors(app)
 

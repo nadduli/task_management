@@ -1,7 +1,9 @@
 #!/usr/bin/python3
 """Auth Router Module"""
 
-from fastapi import APIRouter, Depends, status, BackgroundTasks
+from fastapi import APIRouter, Depends, Request, status, BackgroundTasks
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlmodel.ext.asyncio.session import AsyncSession
 from api.db.database import get_session
 from api.v1.celery_tasks import send_email
@@ -44,6 +46,8 @@ from api.core.config import Config
 
 
 auth_router = APIRouter()
+
+limter = Limiter(key_func=get_remote_address)
 user_service = UserService()
 role_checker = RoleChecker(["admin", "user"])
 
@@ -51,7 +55,8 @@ REFRESH_TOKEN_EXPIRY_DAYS = 2
 
 
 @auth_router.post("/send_mail")
-async def send_mail(emails: EmailModel):
+@limter.limit("1000/minute")
+async def send_mail(request: Request, emails: EmailModel):
     """send mail"""
     email_addresses = emails.email_addresses
 
@@ -64,9 +69,11 @@ async def send_mail(emails: EmailModel):
 
 
 @auth_router.post("/register", status_code=status.HTTP_201_CREATED)
+@limter.limit("1000/minute")
 async def register(
     user_data: UserCreate,
     bg_tasks: BackgroundTasks,
+    request: Request,
     session: AsyncSession = Depends(get_session),
 ):
     """Register new user with username, email and password"""
@@ -99,7 +106,8 @@ async def register(
 
 
 @auth_router.get("/verify/{token}")
-async def verify_email(token: str, session: AsyncSession = Depends(get_session)):
+@limter.limit("1000/minute")
+async def verify_email(request: Request, token: str, session: AsyncSession = Depends(get_session)):
     """Verify email route"""
 
     token_data = decode_url_safe_token(token)
@@ -119,8 +127,9 @@ async def verify_email(token: str, session: AsyncSession = Depends(get_session))
 
 
 @auth_router.post("/login", response_model=dict)
+@limter.limit("1000/minute")
 async def login_users(
-    user_data: LoginModel, session: AsyncSession = Depends(get_session)
+    user_data: LoginModel, request: Request, session: AsyncSession = Depends(get_session)
 ):
     """Login route"""
     email = user_data.email
@@ -156,7 +165,8 @@ async def login_users(
 
 
 @auth_router.get("/refresh_token")
-async def get_new_access_token(token_details: dict = Depends(RefreshTokenBearer())):
+@limter.limit("1000/minute")
+async def get_new_access_token(request: Request, token_details: dict = Depends(RefreshTokenBearer())):
     """Create New Access Token"""
     expiry_timestamp = token_details["exp"]
     if datetime.fromtimestamp(expiry_timestamp) > datetime.now():
@@ -168,7 +178,8 @@ async def get_new_access_token(token_details: dict = Depends(RefreshTokenBearer(
 
 
 @auth_router.get("/me", response_model=UserTask)
-async def get_current_user(
+@limter.limit("1000/minute")
+async def get_current_user(request: Request,
     user=Depends(get_current_user), _: bool = Depends(role_checker)
 ):
     """get current user routes"""
@@ -176,7 +187,8 @@ async def get_current_user(
 
 
 @auth_router.get("/logout")
-async def revoke_token(token_details: dict = Depends(AccessTokenBearer())):
+@limter.limit("1000/minute")
+async def revoke_token(request: Request, token_details: dict = Depends(AccessTokenBearer())):
     """logout endpoint"""
     jti = token_details["jti"]
     await add_jti_to_block_list(jti)
@@ -186,7 +198,8 @@ async def revoke_token(token_details: dict = Depends(AccessTokenBearer())):
 
 
 @auth_router.post("/password-reset-request", status_code=status.HTTP_200_OK)
-async def password_reset_request(email_data: PasswordResetRequestModel):
+@limter.limit("1000/minute")
+async def password_reset_request(request: Request, email_data: PasswordResetRequestModel):
     """Reset Password"""
     email = email_data.email
 
@@ -214,7 +227,9 @@ async def password_reset_request(email_data: PasswordResetRequestModel):
 
 
 @auth_router.post("/password-reset-confirm/{token}", status_code=status.HTTP_200_OK)
+@limter.limit("1000/minute")
 async def reset_password_confirm(
+    request: Request,
     token: str,
     password_data: PasswordResetConfirmModel,
     session: AsyncSession = Depends(get_session),
