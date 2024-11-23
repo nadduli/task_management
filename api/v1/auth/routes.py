@@ -15,6 +15,7 @@ from .schema import (
     EmailModel,
     PasswordResetRequestModel,
     PasswordResetConfirmModel,
+    MagicLinkRequestModel
 )
 from .service import UserService
 from .utils import (
@@ -24,6 +25,8 @@ from .utils import (
     create_url_safe_token,
     decode_url_safe_token,
     generate_password_hash,
+    generate_magic_link_token,
+    verify_magic_link_token
 )
 from datetime import timedelta, datetime
 from fastapi.responses import JSONResponse
@@ -262,3 +265,41 @@ async def reset_password_confirm(
         content={"message": "Error occurred during verification"},
         status_code=status.HTTP_400_BAD_REQUEST,
     )
+
+@auth_router.post("/magic-link", status_code=status.HTTP_200_OK)
+@limter.limit("5/minute")
+async def send_magic_link(request: Request, email_data: MagicLinkRequestModel):
+    email = email_data.email
+
+    token = generate_magic_link_token(email)
+
+    link = f"http://{Config.DOMAIN}/api/v1/auth/magic-link-confirm/{token}"
+
+    html_message = f"""
+    <h1>Welcome to Task Management App</h1>
+    <p>Click the <a href="{link}">link</a> below to login:</p>
+    """
+    subject = "Login using magic link"
+    send_email.delay(email, subject, html_message)
+
+    return JSONResponse(
+        content={"message": "Magic link sent successfully"},
+        status_code=status.HTTP_200_OK,
+    )
+
+@auth_router.post("/magic-link-confirm/{token}", status_code=status.HTTP_200_OK)
+@limter.limit("50/minute")
+async def magic_link_confirm(request: Request, token: str):
+    token_data = verify_magic_link_token(token)
+    email = token_data.get("email")
+
+    if email:
+        return JSONResponse(
+            content={"message": "Magic link confirmed successfully"},
+            status_code=status.HTTP_200_OK,
+        )
+    return JSONResponse(
+        content={"message": "Error occurred during verification"},
+        status_code=status.HTTP_400_BAD_REQUEST,
+    )
+   

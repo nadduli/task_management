@@ -82,3 +82,17 @@ def decode_url_safe_token(token: str):
         return data
     except Exception as e:
         logging.error(str(e))
+
+def generate_magic_link_token(email: str) -> str:
+    """Generate magic link token"""
+    salt = "magic-link"
+    return serializer.dumps({"email": email}, salt=salt)
+
+def verify_magic_link_token(token: str):
+    """Verify magic link token"""
+    salt = "magic-link"
+    try:
+        email = serializer.loads(token, salt=salt, max_age=3600)
+        return email
+    except Exception as e:
+        logging.error(str(e))
