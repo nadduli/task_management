@@ -10,7 +10,6 @@ import logging
 
 
 logger = logging.getLogger("uvicorn.access")
-logger.disabled = True
 
 
 def register_middleware(app: FastAPI):
@@ -23,8 +22,6 @@ def register_middleware(app: FastAPI):
         start_time = time()
         response = await call_next(request)
         process_time = time() - start_time
-        message = f"{request.client.host}:{request.client.port} - {request.method} - {request.url} - {response.status_code} - completed in {process_time}s"
-        print(message)
         return response
 
     app.add_middleware(

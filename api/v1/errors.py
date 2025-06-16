@@ -6,6 +6,7 @@ from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from fastapi import FastAPI, status
 from sqlalchemy.exc import SQLAlchemyError
+import logging
 
 
 class TaskException(Exception):
@@ -231,7 +232,7 @@ def register_all_errors(app: FastAPI):
 
     @app.exception_handler(SQLAlchemyError)
     async def database__error(request, exc):
-        print(str(exc))
+        logger.error(f"Database error: {exc}")
         return JSONResponse(
             content={
                 "message": "Oops! Something went wrong",

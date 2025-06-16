@@ -15,7 +15,7 @@ from .schema import (
     EmailModel,
     PasswordResetRequestModel,
     PasswordResetConfirmModel,
-    MagicLinkRequestModel
+    MagicLinkRequestModel,
 )
 from .service import UserService
 from .utils import (
@@ -26,7 +26,7 @@ from .utils import (
     decode_url_safe_token,
     generate_password_hash,
     generate_magic_link_token,
-    verify_magic_link_token
+    verify_magic_link_token,
 )
 from datetime import timedelta, datetime
 from fastapi.responses import JSONResponse
@@ -110,7 +110,9 @@ async def register(
 
 @auth_router.get("/verify/{token}")
 @limter.limit("1000/minute")
-async def verify_email(request: Request, token: str, session: AsyncSession = Depends(get_session)):
+async def verify_email(
+    request: Request, token: str, session: AsyncSession = Depends(get_session)
+):
     """Verify email route"""
 
     token_data = decode_url_safe_token(token)
@@ -132,7 +134,9 @@ async def verify_email(request: Request, token: str, session: AsyncSession = Dep
 @auth_router.post("/login", response_model=dict)
 @limter.limit("1000/minute")
 async def login_users(
-    user_data: LoginModel, request: Request, session: AsyncSession = Depends(get_session)
+    user_data: LoginModel,
+    request: Request,
+    session: AsyncSession = Depends(get_session),
 ):
     """Login route"""
     email = user_data.email
@@ -169,7 +173,9 @@ async def login_users(
 
 @auth_router.get("/refresh_token")
 @limter.limit("1000/minute")
-async def get_new_access_token(request: Request, token_details: dict = Depends(RefreshTokenBearer())):
+async def get_new_access_token(
+    request: Request, token_details: dict = Depends(RefreshTokenBearer())
+):
     """Create New Access Token"""
     expiry_timestamp = token_details["exp"]
     if datetime.fromtimestamp(expiry_timestamp) > datetime.now():
@@ -182,8 +188,8 @@ async def get_new_access_token(request: Request, token_details: dict = Depends(R
 
 @auth_router.get("/me", response_model=UserTask)
 @limter.limit("1000/minute")
-async def get_current_user(request: Request,
-    user=Depends(get_current_user), _: bool = Depends(role_checker)
+async def get_current_user(
+    request: Request, user=Depends(get_current_user), _: bool = Depends(role_checker)
 ):
     """get current user routes"""
     return user
@@ -191,7 +197,9 @@ async def get_current_user(request: Request,
 
 @auth_router.get("/logout")
 @limter.limit("1000/minute")
-async def revoke_token(request: Request, token_details: dict = Depends(AccessTokenBearer())):
+async def revoke_token(
+    request: Request, token_details: dict = Depends(AccessTokenBearer())
+):
     """logout endpoint"""
     jti = token_details["jti"]
     await add_jti_to_block_list(jti)
@@ -202,7 +210,9 @@ async def revoke_token(request: Request, token_details: dict = Depends(AccessTok
 
 @auth_router.post("/password-reset-request", status_code=status.HTTP_200_OK)
 @limter.limit("1000/minute")
-async def password_reset_request(request: Request, email_data: PasswordResetRequestModel):
+async def password_reset_request(
+    request: Request, email_data: PasswordResetRequestModel
+):
     """Reset Password"""
     email = email_data.email
 
@@ -266,6 +276,7 @@ async def reset_password_confirm(
         status_code=status.HTTP_400_BAD_REQUEST,
     )
 
+
 @auth_router.post("/magic-link", status_code=status.HTTP_200_OK)
 @limter.limit("5/minute")
 async def send_magic_link(request: Request, email_data: MagicLinkRequestModel):
@@ -287,6 +298,7 @@ async def send_magic_link(request: Request, email_data: MagicLinkRequestModel):
         status_code=status.HTTP_200_OK,
     )
 
+
 @auth_router.post("/magic-link-confirm/{token}", status_code=status.HTTP_200_OK)
 @limter.limit("50/minute")
 async def magic_link_confirm(request: Request, token: str):
@@ -302,4 +314,3 @@ async def magic_link_confirm(request: Request, token: str):
         content={"message": "Error occurred during verification"},
         status_code=status.HTTP_400_BAD_REQUEST,
     )
-   

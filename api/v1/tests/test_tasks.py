@@ -12,6 +12,7 @@ def test_get_tasks(test_client, fake_task_service, fake_session):
     assert fake_task_service.get_tasks_called_once()
     assert fake_task_service.get_tasks_called_once_with(fake_session)
 
+
 def test_create_task(test_client, fake_task_service, fake_session):
     """Test create tasks"""
 

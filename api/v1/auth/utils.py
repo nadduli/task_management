@@ -83,10 +83,12 @@ def decode_url_safe_token(token: str):
     except Exception as e:
         logging.error(str(e))
 
+
 def generate_magic_link_token(email: str) -> str:
     """Generate magic link token"""
     salt = "magic-link"
     return serializer.dumps({"email": email}, salt=salt)
+
 
 def verify_magic_link_token(token: str):
     """Verify magic link token"""

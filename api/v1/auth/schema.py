@@ -60,5 +60,6 @@ class PasswordResetConfirmModel(BaseModel):
     new_password: str
     confirm_new_password: str
 
+
 class MagicLinkRequestModel(BaseModel):
     email: str

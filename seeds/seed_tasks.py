@@ -26,22 +26,13 @@ async def seed_tasks(n: int = 20):
             task = Task(
                 title=fake.sentence(),
                 description=fake.text(),
-                due_date=fake.date_time_between(
-                    start_date="now",
-                    end_date="+30d"),
+                due_date=fake.date_time_between(start_date="now", end_date="+30d"),
                 status=fake.random_element(
-                    elements=[
-                        "Pending",
-                        "In Progress",
-                        "Completed"]),
-                priority=fake.random_element(
-                    elements=[
-                        "Low",
-                        "Medium",
-                        "High"]),
+                    elements=["Pending", "In Progress", "Completed"]
+                ),
+                priority=fake.random_element(elements=["Low", "Medium", "High"]),
                 assigned_to=fake.email(),
-                tags=fake.words(
-                    nb=3),
+                tags=fake.words(nb=3),
             )
             session.add(task)
         await session.commit()
